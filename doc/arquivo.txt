@@ -1,0 +1,3 @@
+# Pasta de Diagramas
+
+Aqui ficam os diagramas UML e DER do sistema.
