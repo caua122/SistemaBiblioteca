@@ -1,6 +1,6 @@
 Sistema de Biblioteca
 Descrição
-Este projeto consiste em um MVP (Produto Mínimo Viável) de um Sistema de Biblioteca desenvolvido para a disciplina de Analise desenvolvimento de sistemas.
+Este projeto consiste em um MVP (Produto Mínimo Viável) de um Sistema de Biblioteca desenvolvido para a disciplina de Analise Desenvolvimento De Sistemas.
 
 O sistema permite gerenciar livros, usuários e empréstimos, além de oferecer consulta de livros e um formulário de contato.
 
