@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const { testarConexao } = require("./config/db");
 
 const app = express();
 const PORT = 3000;
@@ -20,6 +21,7 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`Servidor iniciado em http://localhost:${PORT}`);
+    await testarConexao();
 });

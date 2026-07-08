@@ -1,5 +1,25 @@
 const form = document.getElementById("formEmprestimo");
 const lista = document.getElementById("listaEmprestimos");
+const selectUsuario = document.getElementById("usuario");
+const selectLivro = document.getElementById("livro");
+
+// Preenche os dropdowns com os usuários e livros já cadastrados
+async function carregarOpcoes() {
+
+    const [resUsuarios, resLivros] = await Promise.all([
+        fetch("/api/usuarios"),
+        fetch("/api/livros")
+    ]);
+
+    const usuarios = await resUsuarios.json();
+    const livros = await resLivros.json();
+
+    selectUsuario.innerHTML = '<option value="">Selecione o usuário</option>' +
+        usuarios.map(u => `<option value="${u.id}">${u.nome}</option>`).join("");
+
+    selectLivro.innerHTML = '<option value="">Selecione o livro</option>' +
+        livros.map(l => `<option value="${l.id}">${l.titulo}</option>`).join("");
+}
 
 async function carregarEmprestimos() {
 
@@ -11,18 +31,22 @@ async function carregarEmprestimos() {
     dados.forEach(e => {
 
         lista.innerHTML += `
-            <p>
-                <strong>Usuário:</strong> ${e.usuario}<br>
-                <strong>Livro:</strong> ${e.livro}<br>
-                <strong>Status:</strong> ${e.status}<br>
-
+            <div class="item-lista">
+                <div class="info">
+                    <strong>${e.usuario}</strong> — ${e.livro}<br>
+                    Status: ${e.status}
+                    ${
+                        e.status !== "Ativo"
+                        ? `<br><small>Devolvido em ${e.data_devolucao ?? ""}</small>`
+                        : ""
+                    }
+                </div>
                 ${
                     e.status === "Ativo"
-                    ? `<button onclick="devolver(${e.id})">Devolver</button>`
-                    : `<small>Devolvido em ${e.dataDevolucao}</small>`
+                    ? `<div class="acoes"><button type="button" class="btn-sm" onclick="devolver(${e.id})">Devolver</button></div>`
+                    : ""
                 }
-            </p>
-            <hr>
+            </div>
         `;
     });
 }
@@ -31,16 +55,27 @@ form.addEventListener("submit", async (e) => {
 
     e.preventDefault();
 
-    await fetch("/api/emprestimos", {
+    if (!selectUsuario.value || !selectLivro.value) {
+        alert("Selecione um usuário e um livro.");
+        return;
+    }
+
+    const res = await fetch("/api/emprestimos", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            usuario: document.getElementById("usuario").value,
-            livro: document.getElementById("livro").value
+            usuario_id: Number(selectUsuario.value),
+            livro_id: Number(selectLivro.value)
         })
     });
+
+    if (!res.ok) {
+        const erro = await res.json();
+        alert(erro.mensagem || "Erro ao registrar empréstimo.");
+        return;
+    }
 
     form.reset();
     carregarEmprestimos();
@@ -55,4 +90,5 @@ async function devolver(id) {
     carregarEmprestimos();
 }
 
+carregarOpcoes();
 carregarEmprestimos();

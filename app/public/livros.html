@@ -16,6 +16,8 @@
 
         <form id="formLivro">
 
+            <input type="hidden" id="livroId">
+
             <label>Título</label>
 
             <input
@@ -40,8 +42,12 @@
                 required
             >
 
-            <button type="submit">
+            <button type="submit" id="btnSalvar">
                 Cadastrar
+            </button>
+
+            <button type="button" id="btnCancelar" class="btn-cancelar" style="display:none;">
+                Cancelar edição
             </button>
 
         </form>

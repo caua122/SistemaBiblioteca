@@ -1,5 +1,11 @@
 const form = document.getElementById("formLivro");
 const lista = document.getElementById("listaLivros");
+const campoId = document.getElementById("livroId");
+const campoTitulo = document.getElementById("titulo");
+const campoAutor = document.getElementById("autor");
+const campoCategoria = document.getElementById("categoria");
+const btnSalvar = document.getElementById("btnSalvar");
+const btnCancelar = document.getElementById("btnCancelar");
 
 async function carregarLivros() {
 
@@ -12,46 +18,93 @@ async function carregarLivros() {
     livros.forEach(livro => {
 
         lista.innerHTML += `
-            <p>
-                <strong>${livro.titulo}</strong><br>
-                Autor: ${livro.autor}<br>
-                Categoria: ${livro.categoria}
-            </p>
-            <hr>
+            <div class="item-lista">
+                <div class="info">
+                    <strong>${livro.titulo}</strong><br>
+                    ${livro.autor} — ${livro.categoria}
+                </div>
+                <div class="acoes">
+                    <button type="button" class="btn-sm btn-editar" onclick='iniciarEdicao(${JSON.stringify(livro)})'>Editar</button>
+                    <button type="button" class="btn-sm btn-remover" onclick="removerLivro(${livro.id})">Remover</button>
+                </div>
+            </div>
         `;
 
     });
 
 }
 
+// Preenche o formulário com os dados do livro selecionado e entra em modo edição
+function iniciarEdicao(livro) {
+
+    campoId.value = livro.id;
+    campoTitulo.value = livro.titulo;
+    campoAutor.value = livro.autor;
+    campoCategoria.value = livro.categoria;
+
+    btnSalvar.textContent = "Salvar alterações";
+    btnCancelar.style.display = "block";
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function sairDoModoEdicao() {
+
+    campoId.value = "";
+    form.reset();
+
+    btnSalvar.textContent = "Cadastrar";
+    btnCancelar.style.display = "none";
+}
+
+btnCancelar.addEventListener("click", sairDoModoEdicao);
+
 form.addEventListener("submit", async (e) => {
 
     e.preventDefault();
 
-    await fetch("/api/livros", {
+    const dados = {
+        titulo: campoTitulo.value,
+        autor: campoAutor.value,
+        categoria: campoCategoria.value
+    };
 
-        method: "POST",
+    const emEdicao = campoId.value !== "";
 
-        headers: {
-            "Content-Type": "application/json"
-        },
+    const resposta = await fetch(
+        emEdicao ? `/api/livros/${campoId.value}` : "/api/livros",
+        {
+            method: emEdicao ? "PUT" : "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(dados)
+        }
+    );
 
-        body: JSON.stringify({
+    if (!resposta.ok) {
+        const erro = await resposta.json();
+        alert(erro.mensagem || "Erro ao salvar livro.");
+        return;
+    }
 
-            titulo: document.getElementById("titulo").value,
-
-            autor: document.getElementById("autor").value,
-
-            categoria: document.getElementById("categoria").value
-
-        })
-
-    });
-
-    form.reset();
-
+    sairDoModoEdicao();
     carregarLivros();
 
 });
+
+async function removerLivro(id) {
+
+    const confirmar = confirm("Tem certeza que deseja remover este livro?");
+
+    if (!confirmar) return;
+
+    await fetch(`/api/livros/${id}`, {
+        method: "DELETE"
+    });
+
+    carregarLivros();
+
+}
 
 carregarLivros();

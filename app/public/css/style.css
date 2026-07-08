@@ -51,3 +51,58 @@ button{
 button:hover{
     background:#2980b9;
 }
+
+.item-lista{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:10px 0;
+}
+
+.item-lista .info{
+    flex:1;
+    font-size:14px;
+    line-height:1.5;
+}
+
+.acoes{
+    display:flex;
+    gap:6px;
+    flex-shrink:0;
+}
+
+.btn-sm{
+    width:auto;
+    padding:7px 12px;
+    font-size:13px;
+    border-radius:4px;
+}
+
+.btn-editar{
+    background:#f0ad4e;
+}
+
+.btn-editar:hover{
+    background:#ec971f;
+}
+
+.btn-remover{
+    background:#c0392b;
+}
+
+.btn-remover:hover{
+    background:#a93226;
+}
+
+.btn-cancelar{
+    background:#95a5a6;
+    width:auto;
+    padding:10px 16px;
+    font-size:14px;
+    margin-top:8px;
+}
+
+.btn-cancelar:hover{
+    background:#7f8c8d;
+}

@@ -1,86 +1,90 @@
 const express = require("express");
 const router = express.Router();
-
-let livros = [];
+const { pool } = require("../config/db");
 
 // LISTAR (READ)
-router.get("/", (req, res) => {
-    res.json(livros);
+router.get("/", async (req, res) => {
+    try {
+        const [livros] = await pool.query("SELECT * FROM livros ORDER BY id DESC");
+        res.json(livros);
+    } catch (err) {
+        res.status(500).json({ mensagem: "Erro ao buscar livros.", erro: err.message });
+    }
 });
-
 
 // CRIAR (CREATE)
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
+    try {
+        const { titulo, autor, categoria } = req.body;
 
-    const { titulo, autor, categoria } = req.body;
+        const [resultado] = await pool.query(
+            "INSERT INTO livros (titulo, autor, categoria) VALUES (?, ?, ?)",
+            [titulo, autor, categoria]
+        );
 
-    const livro = {
-        id: Date.now(),
-        titulo,
-        autor,
-        categoria
-    };
-
-    livros.push(livro);
-
-    res.json({
-        mensagem: "Livro cadastrado com sucesso!",
-        livro
-    });
-
+        res.json({
+            mensagem: "Livro cadastrado com sucesso!",
+            livro: { id: resultado.insertId, titulo, autor, categoria }
+        });
+    } catch (err) {
+        res.status(500).json({ mensagem: "Erro ao cadastrar livro.", erro: err.message });
+    }
 });
-
 
 // ATUALIZAR (UPDATE)
-router.put("/:id", (req, res) => {
+router.put("/:id", async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const { titulo, autor, categoria } = req.body;
 
-    const id = Number(req.params.id);
-    const { titulo, autor, categoria } = req.body;
+        const [resultado] = await pool.query(
+            "UPDATE livros SET titulo = ?, autor = ?, categoria = ? WHERE id = ?",
+            [titulo, autor, categoria, id]
+        );
 
-    const livro = livros.find(l => l.id === id);
+        if (resultado.affectedRows === 0) {
+            return res.status(404).json({ mensagem: "Livro não encontrado." });
+        }
 
-    if (!livro) {
-        return res.status(404).json({
-            mensagem: "Livro não encontrado."
+        res.json({
+            mensagem: "Livro atualizado com sucesso!",
+            livro: { id, titulo, autor, categoria }
         });
+    } catch (err) {
+        res.status(500).json({ mensagem: "Erro ao atualizar livro.", erro: err.message });
     }
-
-    livro.titulo = titulo;
-    livro.autor = autor;
-    livro.categoria = categoria;
-
-    res.json({
-        mensagem: "Livro atualizado com sucesso!",
-        livro
-    });
-
 });
-
 
 // EXCLUIR (DELETE)
-router.delete("/:id", (req, res) => {
+router.delete("/:id", async (req, res) => {
+    try {
+        const id = Number(req.params.id);
 
-    const id = Number(req.params.id);
+        await pool.query("DELETE FROM livros WHERE id = ?", [id]);
 
-    livros = livros.filter(livro => livro.id !== id);
-
-    res.json({
-        mensagem: "Livro removido com sucesso!"
-    });
-
+        res.json({ mensagem: "Livro removido com sucesso!" });
+    } catch (err) {
+        res.status(500).json({ mensagem: "Erro ao remover livro.", erro: err.message });
+    }
 });
 
-router.get("/buscar/:termo", (req, res) => {
+// BUSCAR
+router.get("/buscar/:termo", async (req, res) => {
+    try {
+        const termo = `%${req.params.termo.toLowerCase()}%`;
 
-    const termo = req.params.termo.toLowerCase();
+        const [resultado] = await pool.query(
+            `SELECT * FROM livros
+             WHERE LOWER(titulo) LIKE ?
+                OR LOWER(autor) LIKE ?
+                OR LOWER(categoria) LIKE ?`,
+            [termo, termo, termo]
+        );
 
-    const resultado = livros.filter(livro =>
-        livro.titulo.toLowerCase().includes(termo) ||
-        livro.autor.toLowerCase().includes(termo) ||
-        livro.categoria.toLowerCase().includes(termo)
-    );
-
-    res.json(resultado);
+        res.json(resultado);
+    } catch (err) {
+        res.status(500).json({ mensagem: "Erro ao buscar livros.", erro: err.message });
+    }
 });
 
 module.exports = router;
